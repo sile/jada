@@ -22,7 +22,7 @@ public final class Search {
 	} else {
 	    Time t;
 	    
-	    System.err.println("= Read key set");
+	    System.err.println("= Read key list");
 	    t = new Time(); 
 
 	    List<String> keys = new ArrayList<String>();
