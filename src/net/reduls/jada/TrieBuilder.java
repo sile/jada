@@ -52,18 +52,23 @@ public final class TrieBuilder {
 	    System.arraycopy(chck, 0, tmpChck, 0, nodeSize);
 	    base = tmpBase;
 	    chck = tmpChck;
+
+	    for(int i=0; i < base.length; i++) 
+		if(base[i] < 0) 
+		    if(chck[i] < 0 || i == NodeAllocator.headIndex())
+			base[i] = 0;
 	    
 	    tail = tailSB.toString();
 	    tailSB.setLength(0);
 	    if(shrinkTail) 
-		tail = new ShrinkTail(base, chck, tail, keys.length).shrink();
+		tail = new ShrinkTail(base, tail, keys.length).shrink();
 	    
 	    hasBuilt = true;
 	}
 
 	BitVector bv = new BitVector(base.length);
 	for(int i=0; i < base.length; i++) 
-	    if(chck[i] >= 0 && base[i] < 0 && i != NodeAllocator.headIndex())
+	    if(base[i] < 0)
 		bv.set(i, true);
 	bv.buildRankIndex();
 	

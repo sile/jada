@@ -9,12 +9,12 @@ final class ShrinkTail {
     private int base[];
     private List<TTT> ss = new ArrayList<TTT>();
 
-    public ShrinkTail(int base[], final int chck[], final String tail, final int keyCount) {
+    public ShrinkTail(int base[], final String tail, final int keyCount) {
 	this.tail = tail;
 	this.base = base;
 	
 	for(int i=0; i < base.length; i++) 
-	    if(chck[i] >= 0 && base[i] < 0 && i != NodeAllocator.headIndex()) {
+	    if(base[i] < 0) {
 		final int beg = -base[i];
 		final int end = tail.indexOf('\0',beg);
 		ss.add(new TTT(tail.substring(beg,end), i));

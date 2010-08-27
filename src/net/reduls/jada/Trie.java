@@ -1,5 +1,6 @@
 package net.reduls.jada;
 
+import java.io.Reader;
 import java.io.IOException;
 
 public final class Trie {
@@ -21,11 +22,24 @@ public final class Trie {
     public int tailLength() { return tail.length(); }
     public int keyCount() { return bv.rank(base.length); }
 
-    public int search(final String key) {
+    public int search(Reader key) throws IOException {
+	int node = 0;
+	int last = 0; // NOTE: -1以外の任意の値が可能
+	for(;;) {
+	    if(base[node] < 0)
+		return last==-1 || tailEqual(-base[node], key) ? bv.rank(node) : -1;
+	    
+	    final int next = base[node] + charcode[(last=key.read())+1];
+	    if(chck[next] == node) node = next;
+	    else                   return -1; 
+	}
+    }
+
+    public int search(final CharSequence key) {
 	int node = 0;
 	for(int i=0;; i++) {
 	    if(base[node] < 0)
-		return tailEqual(-base[node], key, i) ? bv.rank(node) : -1;
+		return i>key.length() || tailEqual(-base[node], key, i) ? bv.rank(node) : -1;
 	    
 	    final int next = base[node] + code(key, i);
 	    if(chck[next] == node) node = next;
@@ -75,18 +89,24 @@ public final class Trie {
 	}
     }
     
-    private int code(final String key, final int i) {
+    private int code(final CharSequence key, final int i) {
 	return charcode[(key.length()==i ? 0 : key.charAt(i)+1)];
     }
 
-    private boolean tailEqual(final int tailHead, final String key, final int i) {
-	if(i >= key.length())
-	    return true;
-
+    private boolean tailEqual(final int tailHead, final CharSequence key, final int i) {
 	final int limit = key.length()-i;
 	for(int j=0; j < limit; j++)
 	    if(key.charAt(i+j) != tail.charAt(tailHead+j))
 		return false;
 	return tail.charAt(tailHead+limit)=='\0';
+    }
+
+    private boolean tailEqual(final int tailHead, Reader key) throws IOException {
+	int i=0;
+	int last=key.read();
+	for(;; i++, last=key.read())
+	    if(last != tail.charAt(tailHead+i))
+		break;
+	return last==-1 && tail.charAt(tailHead+i)=='\0';
     }
 }
