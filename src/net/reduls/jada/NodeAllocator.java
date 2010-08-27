@@ -18,12 +18,14 @@ final class NodeAllocator {
 	    freeNext[i]=-(i+1);
 	}
         
-        freeNext[1] = -codeLimit;
-	freePrev[codeLimit] = -1;
+        freeNext[headIndex()] = -codeLimit;
+	freePrev[codeLimit] = -headIndex();
     }
-
+    
+    public static int headIndex() { return 1; }
+    
     public int allocate(final List<Integer> children) {
-	int cur = -freeNext[1];
+	int cur = -freeNext[headIndex()];
 	final int first = children.get(0);
 	
 	for(;; cur = -freeNext[-freeNext[-freeNext[cur]]]) {

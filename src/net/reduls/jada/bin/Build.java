@@ -10,10 +10,15 @@ import java.io.IOException;
 
 public final class Build {
     public static void main(String[] args) throws IOException {
-	if(args.length != 1) {
-	    System.err.println("Usage: java net.reduls.jada.bin.Build index < unique-sorted-key-set");
+	if(!(args.length == 1 || (args.length==2 && args[0].equals("--shrink")))) {
+	    System.err.println("Usage: java net.reduls.jada.bin.Build [--shrink] index < unique-sorted-key-set");
 	    System.exit(1);
 	}
+
+	// parse arguments
+	final String indexFilePath = args.length==1 ? args[0] : args[1];
+	final boolean shrinkTail = args.length==1 ? false : true;
+
 	Time t;
 
 	System.err.println("= Read key set");
@@ -31,11 +36,11 @@ public final class Build {
 	System.err.println("  == initialize");
 	TrieBuilder bld = new TrieBuilder(keys);
 	System.err.println("  == build");
-	Trie trie = bld.build();
+	Trie trie = bld.build(shrinkTail);
 	System.err.println("    === node count:  "+trie.nodeCount());
 	System.err.println("    === tail length: "+trie.tailLength());
-	System.err.println("  == save");
-	trie.save(args[0]);
+	System.err.println("  == save: "+indexFilePath);
+	trie.save(indexFilePath);
 	System.err.println("DONE ("+t.elapsed()+" ms)");
     }
 

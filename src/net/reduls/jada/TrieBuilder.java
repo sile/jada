@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.ArrayList;
 
 public final class TrieBuilder {
-    private boolean has_built = false;
+    private boolean hasBuilt = false;
 
     private CodeStream[] keys;
     private NodeAllocator alloca;
     private int[] base;
     private int[] chck;
     
-    private StringBuilder tail = new StringBuilder();
+    private StringBuilder tailSB = new StringBuilder();
+    private String tail;
 
     private int charcode[] = new int[0x10001];
     private CharFreq charFreqs[] = new CharFreq[0x10001];
@@ -28,11 +29,15 @@ public final class TrieBuilder {
 	chck = new int[nodeLimit];
 	alloca = new NodeAllocator(base, chck, codeLimit);
 	
-	tail.append("\0\0");
+	tailSB.append("\0\0");
     }
 
     public Trie build() {
-	if(has_built==false) {
+	return build(false);
+    }
+
+    public Trie build(boolean shrinkTail) {
+	if(hasBuilt==false) {
 	    buildImpl(0, keys.length, 0);
 	    
 	    int nodeSize=0;
@@ -47,26 +52,31 @@ public final class TrieBuilder {
 	    System.arraycopy(chck, 0, tmpChck, 0, nodeSize);
 	    base = tmpBase;
 	    chck = tmpChck;
-
-	    has_built = true;
+	    
+	    tail = tailSB.toString();
+	    tailSB.setLength(0);
+	    if(shrinkTail) 
+		tail = new ShrinkTail(base, chck, tail, keys.length).shrink();
+	    
+	    hasBuilt = true;
 	}
 
 	BitVector bv = new BitVector(base.length);
 	for(int i=0; i < base.length; i++) 
-	    if(chck[i] >= 0 && base[i] < 0)
+	    if(chck[i] >= 0 && base[i] < 0 && i != NodeAllocator.headIndex())
 		bv.set(i, true);
 	bv.buildRankIndex();
 	
-	return new Trie(base, chck, tail.toString(), charcode, bv);
+	return new Trie(base, chck, tail, charcode, bv);
     }
 
     private void buildImpl(int beg, final int end, final int rootNode) {
 	if(end-beg == 1) {
 	    if(keys[beg].rest().isEmpty()==false) {
-		base[rootNode] = -tail.length();		
-		tail.append(keys[beg].rest()+'\0');
+		base[rootNode] = -tailSB.length();		
+		tailSB.append(keys[beg].rest()+'\0');
 	    } else {
-		base[rootNode] = -(tail.length()-1);
+		base[rootNode] = -(tailSB.length()-1);
 	    }
 	    return;
 	}
