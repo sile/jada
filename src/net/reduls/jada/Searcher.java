@@ -17,6 +17,10 @@ public final class Searcher {
 	this.charcode = charcode;
     }
 
+    public int nodeCount() { return base.length; }
+    public int tailLength() { return tail.length(); }
+    public int keyCount() { return tind.length; }
+
     public int search(final String key) {
 	int node = 0;
 	for(int i=0;; i++) {

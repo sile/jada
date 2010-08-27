@@ -1,7 +1,7 @@
 package net.reduls.jada.bin;
 
-import net.reduls.jada.Builder;
-import net.reduls.jada.Searcher; // <- TODO: Trie
+import net.reduls.jada.TrieBuilder;
+import net.reduls.jada.Trie;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.BufferedReader;
@@ -29,9 +29,11 @@ public final class Build {
 	System.err.println("= Build index ");
 	t = new Time();
 	System.err.println("  == initialize");
-	Builder bld = new Builder(keys);
+	TrieBuilder bld = new TrieBuilder(keys);
 	System.err.println("  == build");
-	Searcher trie = bld.build();
+	Trie trie = bld.build();
+	System.err.println("    === node count:  "+trie.nodeCount());
+	System.err.println("    === tail length: "+trie.tailLength());
 	System.err.println("  == save");
 	trie.save(args[0]);
 	System.err.println("DONE ("+t.elapsed()+" ms)");

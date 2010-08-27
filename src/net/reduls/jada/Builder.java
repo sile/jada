@@ -32,7 +32,7 @@ public final class Builder {
 	alloca = new NodeAllocator(base, chck, codeLimit);
     }
 
-    public Searcher build() {
+    public Trie build() {
 	buildImpl(0, keys.length, 0);
 	tind[tindTail] = tail.length();
 	
@@ -51,7 +51,7 @@ public final class Builder {
 	    chck = tmpChck;
 	}
 
-	return new Searcher(base, chck, tind, tail.toString(), charcode);
+	return new Trie(base, chck, tind, tail.toString(), charcode);
     }
 
     private void buildImpl(int beg, final int end, final int rootNode) {
