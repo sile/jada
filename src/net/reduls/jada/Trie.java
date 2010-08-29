@@ -137,17 +137,19 @@ public final class Trie {
         int node = root.node;
         int last = 0; // set arbitrary initial value but -1
         for(;;) {
-	    if(base[node] < 0) {
-		if(last==-1 || tailIncluding(-base[node], key))
-                    root.id = bv.rank(node);
-                return false;
-            }
-
-            final int terminal = base[node] + charcode[0];
-            if(chck[terminal] == node) {
-                root.node = node;
-                root.id = bv.rank(node);
-                return key.peek()==-1 ? false : true;
+            if(node != root.node) {
+                if(base[node] < 0) {
+                    if(last==-1 || tailIncluding(-base[node], key))
+                        root.id = bv.rank(node);
+                    return false;
+                }
+                
+                final int terminal = base[node] + charcode[0];
+                if(chck[terminal] == node) {
+                    root.node = node;
+                    root.id = bv.rank(terminal);
+                    return key.peek()==-1 ? false : true;
+                }
             }
 	    
 	    final int next = base[node] + charcode[(last=key.read())+1];
