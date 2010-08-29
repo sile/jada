@@ -4,12 +4,21 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * DoubleArray-TrieのTAIL配列の圧縮を行うクラス。
+ */
 final class ShrinkTail {
     private final String tail;
     private int base[];
-    private List<TTT> ss = new ArrayList<TTT>();
+    private List<StringIndexPair> pairs = new ArrayList<StringIndexPair>();
 
-    public ShrinkTail(int base[], final String tail, final int keyCount) {
+    /**
+     * TAIL圧縮に必要な情報を受け取り、{@link ShrinkTail}インスタンスを初期化する。
+     *
+     * @param base トライのBASE配列。{@link #shrink}メソッド呼び出しにより破壊的に修正される。
+     * @param tail 圧縮元となるTAIL配列
+     */
+    public ShrinkTail(int base[], final String tail) {
 	this.tail = tail;
 	this.base = base;
 	
@@ -17,20 +26,26 @@ final class ShrinkTail {
 	    if(base[i] < 0) {
 		final int beg = -base[i];
 		final int end = tail.indexOf('\0',beg);
-		ss.add(new TTT(tail.substring(beg,end), i));
+		pairs.add(new StringIndexPair(tail.substring(beg,end), i));
 	    }
     }
 
+    /**
+     * TAIL配列の圧縮を行う。<br />
+     * 本メソッドの呼び出しに伴い、{@link #base}配列に保持されている各キーの末尾文字列へのインデックス値は破壊的に修正される。
+     *
+     * @return 圧縮後のTAIL配列
+     */
     public String shrink() {
-	Collections.sort(ss);
+	Collections.sort(pairs);
 
 	StringBuilder newTail = new StringBuilder();
 	newTail.append("\0\0");
-	for(int i=0; i < ss.size(); i++) {
-	    final TTT t = ss.get(i);
+	for(int i=0; i < pairs.size(); i++) {
+	    final StringIndexPair t = pairs.get(i);
 	    int pos = newTail.length();
-	    if(i>0 && ss.get(i-1).including(t))
-		pos -= t.s.length()+1; // +1 is necessary for last '\0' character
+	    if(i>0 && pairs.get(i-1).including(t))
+		pos -= t.s.length()+1; // +1 is necepairsary for last '\0' character
 	    else
 		newTail.append(t.s+'\0');
 	    base[t.i] = -pos;
@@ -38,16 +53,19 @@ final class ShrinkTail {
 	return newTail.toString();
     }
 
-    private static class TTT implements Comparable<TTT> {
-	public String s;
-	public int i;
+    /**
+     * キーの接尾文字列とそのTAIL配列内での開始インデックスとの対応を保持するクラス。
+     */
+    private static class StringIndexPair implements Comparable<StringIndexPair> {
+	public final String s;
+	public final int i;
 	
-	public TTT(String s, int i) {
+	public StringIndexPair(String s, int i) {
 	    this.s = s;
 	    this.i = i;
 	}
 
-	public boolean including(TTT t) {
+	public boolean including(StringIndexPair t) {
 	    int i=s.length()-1;
 	    int j=t.s.length()-1;
 
@@ -58,7 +76,7 @@ final class ShrinkTail {
 	    }	    
 	}
 
-	public int compareTo(TTT t) {
+	public int compareTo(StringIndexPair t) {
 	    int i=s.length()-1;
 	    int j=t.s.length()-1;
 

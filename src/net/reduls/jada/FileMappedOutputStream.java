@@ -7,6 +7,10 @@ import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
+/**
+ * ファイルにマッピングされた出力ストリーム。<br />
+ * 効率のために、多バイトデータは、ホストマシンのエンディアンに従い出力される。
+ */
 final class FileMappedOutputStream {
     private final MappedByteBuffer mbb;
 

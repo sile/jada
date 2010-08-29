@@ -6,6 +6,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
+/**
+ * ファイルにマッピングされた入力ストリーム。<br />
+ * 効率のために、多バイトデータは、ホストマシンのエンディアンに応じて解釈される。
+ */
 final class FileMappedInputStream {
     private final FileChannel cnl;
     private int cur=0;

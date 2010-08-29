@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * DoubleArray-Trieの構築を行うクラス
+ * DoubleArray-Trieの構築を行うクラス。
  */
 public final class TrieBuilder {
     private boolean hasBuilt = false;
@@ -125,9 +125,9 @@ public final class TrieBuilder {
 	    if(charFreqs[i].count==0) {
 		if(codeLimit == -1)
 		    codeLimit = i+1;
-		charcode[charFreqs[i].code] = codeLimit-1;
+		charcode[charFreqs[i].code] = 0;
 	    } else {
-		charcode[charFreqs[i].code] = i;
+		charcode[charFreqs[i].code] = i+1;
 	    }
 	return count;
     }
@@ -160,6 +160,9 @@ public final class TrieBuilder {
 	return cur;
     }
 
+    /**
+     * 入力キーセット内の各文字のコード値と出現頻度を保持するクラス。
+     */
     private static class CharFreq implements Comparable<CharFreq> {
 	public int code;
 	public int count = 0;
@@ -167,7 +170,10 @@ public final class TrieBuilder {
 	public CharFreq(int code) { this.code = code; }
 	public int compareTo(CharFreq cf) { return cf.count - count; }
     }
-
+    
+    /**
+     * 入力キーセットの各キーをストリームとして扱うためのラッパークラス。
+     */
     private static class CodeStream {
 	private final String s;
 	private int p = 0;

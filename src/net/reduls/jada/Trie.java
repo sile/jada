@@ -2,6 +2,9 @@ package net.reduls.jada;
 
 import java.io.IOException;
 
+/**
+ * DoubleArray-Trieクラス
+ */
 public final class Trie {
     private final int base[];
     private final int chck[];
@@ -77,6 +80,9 @@ public final class Trie {
 	return tail.charAt(tailHead+i)=='\0';
     }
 
+    /**
+     * Trieのノード。
+     */
     public static final class Node {
         protected int node = 0;
         protected int id = -1;
@@ -125,12 +131,18 @@ public final class Trie {
 	    in.close();
 	}
     }
-    
+ 
+    /**
+     * トライの検索キーとして使われるストリームクラスのインターフェース。
+     */
     public interface CodeStream {
         public int read();
         public int peek();
     }
 
+    /**
+     * {@link CodeStream}の{@link CharSequence}に対する実装。
+     */
     public static class CharSequenceCodeStream implements CodeStream {
         private final CharSequence source;
         private int pos = 0;
