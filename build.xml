@@ -17,7 +17,7 @@
   </target>
 
   <target name="javadoc">
-    <javadoc destdir="${javadoc.dir}" private="on">
+    <javadoc destdir="${javadoc.dir}">
       <fileset dir="${src.dir}"/>
     </javadoc>
   </target>

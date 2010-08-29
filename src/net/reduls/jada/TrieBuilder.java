@@ -2,6 +2,7 @@ package net.reduls.jada;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * DoubleArray-Trieの構築を行うクラス。
@@ -22,10 +23,18 @@ public final class TrieBuilder {
 
     private int codeLimit = -1;
 
-    public TrieBuilder(final List<String> keys) {
+    /**
+     * トライの構築対象となるキーセットを受け取り、{@link TrieBuilder}インスタンスを作成する。<br />
+     * 入力キーセットは、ソート済みで各要素はユニークである必要がある。<br />
+     * キーセットが上記上限を満たしていない場合の{@link #build}メソッド呼び出しの結果は未定義。
+     *
+     * @param keys トライ構築対象となるキーセット
+     */
+    public TrieBuilder(final Collection<String> keys) {
 	this.keys = new CodeStream[keys.size()];
-	for(int i=0; i < keys.size(); i++) 
-	    this.keys[i] = new CodeStream(keys.get(i));
+        int i=0;
+        for(String key : keys) 
+	    this.keys[i++] = new CodeStream(key);
 
 	final int nodeLimit = (int)((double)countNode()*1.5)+0x10000;
 	base = new int[nodeLimit];
@@ -35,10 +44,22 @@ public final class TrieBuilder {
 	tailSB.append("\0\0");
     }
 
+    /**
+     * トライを構築する。
+     * {@code build(false)}に等しい。
+     *
+     * @return 構築済みの{@link Trie}インスタンス
+     */
     public Trie build() {
 	return build(false);
     }
 
+    /**
+     * トライを構築する。
+     *
+     * @param shrinkTail trueならTAIL配列の圧縮を行う。圧縮した場合、TAIL配列のサイズは縮小されるが、その分構築に時間が掛かり、また構築時のメモリ消費量も多くなる。
+     * @return 構築済みの{@link Trie}インスタンス
+     */
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
             if(keys.length != 0)
@@ -65,7 +86,7 @@ public final class TrieBuilder {
 	    tail = tailSB.toString();
 	    tailSB.setLength(0);
 	    if(shrinkTail) 
-		tail = new ShrinkTail(base, tail, keys.length).shrink();
+		tail = new ShrinkTail(base, tail).shrink();
 	    
 	    hasBuilt = true;
 	}
