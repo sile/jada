@@ -6,12 +6,15 @@ import java.io.IOException;
  * DoubleArray-Trieクラス
  */
 public final class Trie {
-    private final int base[];
-    private final int chck[];
-    private final String tail;
-    private final int charcode[];
-    private final BitVector bv;
+    private final int base[];     // BASE配列
+    private final int chck[];     // CHECK配列
+    private final String tail;    // TAIL配列
+    private final int charcode[]; // 文字のコード値から、実際に遷移に用いる値へのマッピングテーブル
+    private final BitVector bv;   // ノードに対応するID算出用のビット配列
 
+    /**
+     * コンストラクタ
+     */
     Trie(int base[], int chck[], String tail, int charcode[], BitVector bv) {
 	this.base = base;
 	this.chck = chck;
@@ -19,6 +22,50 @@ public final class Trie {
 	this.charcode = charcode;
 	this.bv = bv;
     }
+
+    public void save(final String filepath) throws IOException {
+	FileMappedOutputStream out = 
+	    new FileMappedOutputStream(filepath, 
+				       bv.dataSize() +
+				       2 * 4 + 
+				       (base.length+chck.length+charcode.length)*4 +
+				       tail.length()*2);
+	try {
+	    bv.write(out);
+	    
+	    out.putInt(base.length);
+	    out.putInt(tail.length());
+	    
+	    for(int i=0; i < 0x10000;     i++) out.putInt(charcode[i]);
+	    for(int i=0; i < base.length; i++) out.putInt(base[i]);
+	    for(int i=0; i < chck.length; i++) out.putInt(chck[i]);
+	    out.putString(tail);
+	} finally {
+	    out.close();
+	}
+    }
+
+    public static Trie load(final String filepath) throws IOException {
+	FileMappedInputStream in = 
+	    new FileMappedInputStream(filepath);
+	try {
+	    final BitVector bv = new BitVector(in);
+	    
+	    final int nodeSize = in.getInt();
+	    final int tailSize = in.getInt();
+	    
+	    final int charcode[] = in.getIntArray(0x10000);
+	    final int base[] = in.getIntArray(nodeSize);
+	    final int chck[] = in.getIntArray(nodeSize);
+	    final String tail = in.getString(tailSize);
+	    
+	    return new Trie(base, chck, tail, charcode, bv);
+	} finally {
+	    in.close();
+	}
+    }
+ 
+
 
     public int nodeCount() { return base.length; }
     public int tailLength() { return tail.length(); }
@@ -90,48 +137,6 @@ public final class Trie {
         public int id() { return id; }
     }
 
-    public void save(final String filepath) throws IOException {
-	FileMappedOutputStream out = 
-	    new FileMappedOutputStream(filepath, 
-				       bv.dataSize() +
-				       2 * 4 + 
-				       (base.length+chck.length+charcode.length)*4 +
-				       tail.length()*2);
-	try {
-	    bv.write(out);
-	    
-	    out.putInt(base.length);
-	    out.putInt(tail.length());
-	    
-	    for(int i=0; i < 0x10000;     i++) out.putInt(charcode[i]);
-	    for(int i=0; i < base.length; i++) out.putInt(base[i]);
-	    for(int i=0; i < chck.length; i++) out.putInt(chck[i]);
-	    out.putString(tail);
-	} finally {
-	    out.close();
-	}
-    }
-
-    public static Trie load(final String filepath) throws IOException {
-	FileMappedInputStream in = 
-	    new FileMappedInputStream(filepath);
-	try {
-	    final BitVector bv = new BitVector(in);
-	    
-	    final int nodeSize = in.getInt();
-	    final int tailSize = in.getInt();
-	    
-	    final int charcode[] = in.getIntArray(0x10000);
-	    final int base[] = in.getIntArray(nodeSize);
-	    final int chck[] = in.getIntArray(nodeSize);
-	    final String tail = in.getString(tailSize);
-	    
-	    return new Trie(base, chck, tail, charcode, bv);
-	} finally {
-	    in.close();
-	}
-    }
- 
     /**
      * トライの検索キーとして使われるストリームクラスのインターフェース。
      */
