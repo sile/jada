@@ -1,0 +1,47 @@
+[名前]
+- jada
+
+
+[バージョン]
+- 0.1.0
+
+
+[概要]
+-JavaによるDoubleArray Trieの実装
+-静的構築
+-ファイルへの保存/ファイルからの読み込みが可能
+-キーとID値の対応を保持するマップ
+　--ID値は、各キーに対して0以上キー数未満の値が自動的に付与される
+
+
+[ビルド方法]
+- jarファイル
+　$ ant
+
+- javadoc
+　$ ant javadoc
+
+
+[コマンド使用例]
+# トライ構築
+$ java -cp jada-0.1.0.jar net.reduls.jada.bin.Build trie.idx < キーセットファイル
+
+# トライ検索
+$ java -cp jada-0.1.0.jar net.reduls.jada.bin.Search trie.idx < キーリストファイル
+
+# common-prefix-search
+$ java -cp jada-0.1.0.jar net.reduls.jada.bin.CommonPrefixSearch trie.idx < キーリストファイル
+
+
+[Java API]
+- TODO
+- 現状(2010/08/29)はjavadocを参照のこと
+
+
+[プロジェクトページ]
+- http://github.com/sile/jada
+
+
+[バグ報告等]
+- phjgt308@gmail.com
+- http://github.com/sile/jada/issues
