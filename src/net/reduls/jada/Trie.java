@@ -137,13 +137,13 @@ public final class Trie {
         int node = root.node;
         int last = 0; // set arbitrary initial value but -1
         for(;;) {
-            if(node != root.node) {
-                if(base[node] < 0) {
-                    if(last==-1 || tailIncluding(-base[node], key))
-                        root.id = bv.rank(node);
-                    return false;
-                }
-                
+            if(base[node] < 0) {
+                if(last==-1 || tailIncluding(-base[node], key))
+                    root.id = bv.rank(node);
+                return false;
+            }
+
+            if(node != root.node) {                
                 final int terminal = base[node] + charcode[0];
                 if(chck[terminal] == node) {
                     root.node = node;
