@@ -38,7 +38,8 @@ public final class TrieBuilder {
 
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
-	    buildImpl(0, keys.length, 0);
+            if(keys.length != 0)
+                buildImpl(0, keys.length, 0);
 	    
 	    int nodeSize=0;
 	    for(int i=0; i < base.length; i++)
@@ -112,7 +113,7 @@ public final class TrieBuilder {
 	for(int i=0; i < 0x10001; i++)
 	    charFreqs[i] = new CharFreq(i);
 
-	final int count = countNodeImpl(0, keys.length);
+	final int count = keys.length==0 ? 0 : countNodeImpl(0, keys.length);
 	for(CodeStream cs : keys)
 	    cs.reset();
 

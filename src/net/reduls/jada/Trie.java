@@ -1,6 +1,5 @@
 package net.reduls.jada;
 
-import java.io.Reader;
 import java.io.IOException;
 
 public final class Trie {
@@ -22,9 +21,9 @@ public final class Trie {
     public int tailLength() { return tail.length(); }
     public int keyCount() { return bv.rank(base.length); }
 
-    public int search(Reader key) throws IOException {
+    public int search(CodeStream key) {
 	int node = 0;
-	int last = 0; // NOTE: -1以外の任意の値が可能
+	int last = 0; // NOTE: set arbitrary initial value but -1
 	for(;;) {
 	    if(base[node] < 0)
 		return last==-1 || tailEqual(-base[node], key) ? bv.rank(node) : -1;
@@ -36,15 +35,53 @@ public final class Trie {
     }
 
     public int search(final CharSequence key) {
-	int node = 0;
-	for(int i=0;; i++) {
-	    if(base[node] < 0)
-		return i>key.length() || tailEqual(-base[node], key, i) ? bv.rank(node) : -1;
+        return search(new CharSequenceCodeStream(key));
+    }
+
+    private boolean tailEqual(final int tailHead, CodeStream in) {
+	int i=0;
+	for(;; i++, in.read())
+	    if(in.peek() != tail.charAt(tailHead+i))
+		break;
+	return in.peek() ==-1 && tail.charAt(tailHead+i)=='\0';
+    }
+
+    public boolean commonPrefixSearch(CodeStream key, Node root) {
+        int node = root.node;
+        int last = 0; // NOTE: set arbitrary initial value but -1
+        for(;;) {
+	    if(base[node] < 0) {
+		if(last==-1 || tailIncluding(-base[node], key))
+                    root.id = bv.rank(node);
+                return false;
+            }
+
+            final int terminal = base[node] + charcode[0];
+            if(chck[terminal] == node) {
+                root.node = node;
+                root.id = bv.rank(node);
+                return key.peek()==-1 ? false : true;
+            }
 	    
-	    final int next = base[node] + code(key, i);
+	    final int next = base[node] + charcode[(last=key.read())+1];
 	    if(chck[next] == node) node = next;
-	    else                   return -1; 
-	}
+	    else                   return false;
+        }
+    }
+    
+    private boolean tailIncluding(final int tailHead, CodeStream in) {
+        int i = 0;
+	for(;; i++, in.read())
+	    if(in.peek() != tail.charAt(tailHead+i))
+		break;
+	return tail.charAt(tailHead+i)=='\0';
+    }
+
+    public static final class Node {
+        protected int node = 0;
+        protected int id = -1;
+        
+        public int id() { return id; }
     }
 
     public void save(final String filepath) throws IOException {
@@ -89,24 +126,27 @@ public final class Trie {
 	}
     }
     
-    private int code(final CharSequence key, final int i) {
-	return charcode[(key.length()==i ? 0 : key.charAt(i)+1)];
+    public interface CodeStream {
+        public int read();
+        public int peek();
     }
 
-    private boolean tailEqual(final int tailHead, final CharSequence key, final int i) {
-	final int limit = key.length()-i;
-	for(int j=0; j < limit; j++)
-	    if(key.charAt(i+j) != tail.charAt(tailHead+j))
-		return false;
-	return tail.charAt(tailHead+limit)=='\0';
-    }
+    public static class CharSequenceCodeStream implements CodeStream {
+        private final CharSequence source;
+        private int pos = 0;
+        
+        public CharSequenceCodeStream(CharSequence source) {
+            this.source = source;
+        }
+        
+        public int read() {
+            return pos < source.length() ? source.charAt(pos++) : -1;
+        }
+        
+        public int peek() {
+            return pos < source.length() ? source.charAt(pos) : -1;
+        }
 
-    private boolean tailEqual(final int tailHead, Reader key) throws IOException {
-	int i=0;
-	int last=key.read();
-	for(;; i++, last=key.read())
-	    if(last != tail.charAt(tailHead+i))
-		break;
-	return last==-1 && tail.charAt(tailHead+i)=='\0';
+        public int offset() { return pos; }
     }
 }
