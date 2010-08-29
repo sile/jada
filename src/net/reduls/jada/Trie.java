@@ -3,7 +3,7 @@ package net.reduls.jada;
 import java.io.IOException;
 
 /**
- * DoubleArray-Trieクラス
+ * DoubleArray Trieクラス。
  */
 public final class Trie {
     private final int base[];     // BASE配列
