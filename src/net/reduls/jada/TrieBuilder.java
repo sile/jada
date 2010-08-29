@@ -3,6 +3,9 @@ package net.reduls.jada;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * DoubleArray-Trieの構築を行うクラス
+ */
 public final class TrieBuilder {
     private boolean hasBuilt = false;
 
