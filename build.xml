@@ -8,6 +8,9 @@
 
   <target name="jar" depends="compile">
     <jar jarfile="jada-${version}.jar" basedir="${classes.dir}">
+      <metainf dir=".">
+        <include name="COPYING" />
+      </metainf>
     </jar>
   </target>
 
