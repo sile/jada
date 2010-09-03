@@ -3,7 +3,7 @@
 
 
 [バージョン]
-- 0.1.1
+- 0.1.2
 
 
 [概要]
@@ -24,13 +24,13 @@
 
 [コマンド使用例]
 # トライ構築
-$ java -cp jada-0.1.0.jar net.reduls.jada.bin.Build trie.idx < ソート済みキーセットファイル
+$ java -cp jada-0.1.2.jar net.reduls.jada.bin.Build trie.idx < ソート済みキーセットファイル
 
 # トライ検索
-$ java -cp jada-0.1.0.jar net.reduls.jada.bin.Search trie.idx < キーリストファイル
+$ java -cp jada-0.1.2.jar net.reduls.jada.bin.Search trie.idx < キーリストファイル
 
 # common-prefix-search
-$ java -cp jada-0.1.0.jar net.reduls.jada.bin.CommonPrefixSearch trie.idx < キーリストファイル
+$ java -cp jada-0.1.2.jar net.reduls.jada.bin.CommonPrefixSearch trie.idx < キーリストファイル
 
 ※ ファイルはいずれも 'キー文字列[改行]*' 形式
 
