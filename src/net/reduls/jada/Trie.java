@@ -177,7 +177,7 @@ public final class Trie {
     /**
      * Trieのノード。
      */
-    public static final class Node {
+    public static final class Node implements Cloneable {
         protected int node = 0;
         protected int id = -1;
 
@@ -185,12 +185,25 @@ public final class Trie {
          * ルートノード用の{@link Node}インスタンスを作成する。
          */
         public Node() {}
+
+        /**
+         * {@link Node}インスタンスのコピーを作成する。
+         */
+        private Node(Node n) {
+          node = n.node;
+          id = n.id;
+        }
         
         /**
          * ノードのIDを返す。
          * @return ノードのID。対応するIDがない場合は-1が返される。
          */
         public int id() { return id; }
+
+         /**
+          * {@link Node}インスタンスのコピーを作成する。
+          */
+        public Node clone() { return new Node(this); }
     }
 
     /**
