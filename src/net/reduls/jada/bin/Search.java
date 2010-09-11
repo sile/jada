@@ -29,7 +29,7 @@ public final class Search {
      */
     public static void main(String[] args) throws IOException {
 	if(!(args.length==1 || (args.length==2 && args[0].equals("--bench")))) {
-	    System.err.println("Usage: java net.reduls.jada.bin.Search [-bench] index < key-list > key-id-list");
+	    System.err.println("Usage: java net.reduls.jada.bin.Search [--bench] index < key-list > key-id-list");
 	    System.exit(1);
 	}
 
