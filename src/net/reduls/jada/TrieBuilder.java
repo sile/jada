@@ -174,9 +174,8 @@ public final class TrieBuilder {
     private int endOfSameNode(final int beg, final int end) {
 	final int ch = keys[beg].read();
 	int cur = beg+1;
-	int lastCh = -1;
 
-	for(; cur < end && ch == (lastCh=keys[cur].peek()); cur++)
+	for(; cur < end && ch == keys[cur].peek(); cur++)
 	    keys[cur].read();
 	return cur;
     }
