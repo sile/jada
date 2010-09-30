@@ -10,7 +10,7 @@ import java.util.Collection;
 public final class TrieBuilder {
     private boolean hasBuilt = false;
 
-    private CodeStream[] keys;
+    private String[] keys;
     private NodeAllocator alloca;
     private int[] base;
     private int[] chck;
@@ -31,10 +31,10 @@ public final class TrieBuilder {
      * @param keys トライ構築対象となるキーセット
      */
     public TrieBuilder(final Collection<String> keys) {
-	this.keys = new CodeStream[keys.size()];
+	this.keys = new String[keys.size()]; 
         int i=0;
         for(String key : keys) 
-	    this.keys[i++] = new CodeStream(key);
+	    this.keys[i++] = key;
 
 	final int nodeLimit = (int)((double)countNode()*1.5)+0x10000;
 	base = new int[nodeLimit];
@@ -63,7 +63,7 @@ public final class TrieBuilder {
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
             if(keys.length != 0)
-                buildImpl(0, keys.length, 0);
+                buildImpl(0, keys.length, 0, 0);
 	    
 	    int nodeSize=0;
 	    for(int i=0; i < base.length; i++)
@@ -100,11 +100,11 @@ public final class TrieBuilder {
 	return new Trie(base, chck, tail, charcode, bv);
     }
 
-    private void buildImpl(int beg, final int end, final int rootNode) {
+    private void buildImpl(int beg, final int end, final int rootNode, final int depth) {
 	if(end-beg == 1) {
-	    if(keys[beg].rest().isEmpty()==false) {
+	    if(rest(keys[beg], depth).isEmpty()==false) {
 		base[rootNode] = -tailSB.length();		
-		tailSB.append(keys[beg].rest()+'\0');
+		tailSB.append(rest(keys[beg], depth)+'\0');
 	    } else {
 		base[rootNode] = -(tailSB.length()-1);
 	    }
@@ -114,16 +114,17 @@ public final class TrieBuilder {
 	List<Integer> children = new ArrayList<Integer>();
 	List<Integer> ranges   = new ArrayList<Integer>();
 	do {
-	    final int ch = keys[beg].peek();
+	    final int ch = readCode(keys[beg], depth);
 	    children.add(charcode[ch]);
 	    ranges.add(beg);
-	    beg = endOfSameNode(beg, end);
+	    beg = endOfSameNode(beg, end, depth);
 	} while (beg != end);
 	ranges.add(end);
 
 	final int baseNode = alloca.allocate(children);
 	for(int i=0; i < children.size(); i++) 
-	    buildImpl(ranges.get(i), ranges.get(i+1), setNode(rootNode, baseNode, children.get(i)));
+	    buildImpl(ranges.get(i), ranges.get(i+1), 
+                      setNode(rootNode, baseNode, children.get(i)), depth+1);
     }
 
     private int setNode(int node, int baseNode, int code) {
@@ -137,9 +138,7 @@ public final class TrieBuilder {
 	for(int i=0; i < 0x10001; i++)
 	    charFreqs[i] = new CharFreq(i);
 
-	final int count = keys.length==0 ? 0 : countNodeImpl(0, keys.length);
-	for(CodeStream cs : keys)
-	    cs.reset();
+	final int count = keys.length==0 ? 0 : countNodeImpl(0, keys.length, 0);
 
         java.util.Arrays.sort(charFreqs);
 	for(int i=0; i < 0x10001; i++)
@@ -153,31 +152,38 @@ public final class TrieBuilder {
 	return count;
     }
     
-    private int countNodeImpl(int beg, final int end)  {
+    private int countNodeImpl(int beg, final int end, final int depth)  {
 	if(end-beg == 1) 
-	    return keys[beg].read()==0 ? 0 : 1; 
+	    return readCode(keys[beg], depth)==0 ? 0 : 1; 
 	
 	List<Integer> ranges = new ArrayList<Integer>();
 	do {
-	    charFreqs[keys[beg].peek()].count++;
+	    charFreqs[readCode(keys[beg], depth)].count++;
 	    ranges.add(beg);
-	    beg = endOfSameNode(beg, end);
+	    beg = endOfSameNode(beg, end, depth);
 	} while (beg != end);
 	ranges.add(end);
 	
 	int count = ranges.size()-1;
 	for(int i=0; i < ranges.size()-1; i++)
-	    count += countNodeImpl(ranges.get(i), ranges.get(i+1));
+	    count += countNodeImpl(ranges.get(i), ranges.get(i+1), depth+1);
 	return count;
     }
 
-    private int endOfSameNode(final int beg, final int end) {
-	final int ch = keys[beg].read();
+    private int endOfSameNode(final int beg, final int end, final int depth) {
+	final int ch = readCode(keys[beg], depth);
 	int cur = beg+1;
 
-	for(; cur < end && ch == keys[cur].peek(); cur++)
-	    keys[cur].read();
+	for(; cur < end && ch == readCode(keys[cur], depth); cur++);
 	return cur;
+    }
+
+    public int readCode(String s, int depth) {
+        return depth < s.length() ? s.charAt(depth)+1 : 0; 
+    }
+    
+    public String rest(String s, int depth) {
+        return depth < s.length() ? s.substring(depth) : "";
     }
 
     /**
@@ -189,19 +195,5 @@ public final class TrieBuilder {
 	
 	public CharFreq(int code) { this.code = code; }
 	public int compareTo(CharFreq cf) { return cf.count - count; }
-    }
-    
-    /**
-     * 入力キーセットの各キーをストリームとして扱うためのラッパークラス。
-     */
-    private static class CodeStream {
-	private final String s;
-	private int p = 0;
-
-	public CodeStream(String s) { this.s = s; }
-	public int read() { return p < s.length() ? s.charAt(p++)+1 : 0; }
-	public int peek() { return p < s.length() ? s.charAt(p)+1 : 0; }
-	public void reset() { p = 0; }
-	public String rest() { return s.substring(p); }
     }
 }
