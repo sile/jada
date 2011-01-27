@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.PriorityQueue;
+
 /**
  * DoubleArray-Trieの構築を行うクラス。
  */
@@ -63,7 +65,7 @@ public final class TrieBuilder {
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
             if(keys.length != 0)
-                buildImpl(0, keys.length, 0, 0);
+                buildImpl();//0, keys.length, 0, 0);
 	    
 	    int nodeSize=0;
 	    for(int i=0; i < base.length; i++)
@@ -99,6 +101,60 @@ public final class TrieBuilder {
 	
 	return new Trie(base, chck, tail, charcode, bv);
     }
+    
+    private final class Node implements Comparable<Node> {
+        public int rootNode;
+        public int beg;
+        public int end;
+        public int depth;
+        public List<Integer> children = new ArrayList<Integer>();
+        public List<Integer> ranges   = new ArrayList<Integer>();
+
+        public Node(int beg, int end, int node, int depth) {
+            this.rootNode = node;
+            this.beg = beg;
+            this.end = end;
+            this.depth = depth;
+
+            if(this.end-this.beg != 1) {
+            do {
+                final int ch = readCode(keys[this.beg], this.depth);
+                children.add(charcode[ch]);
+                ranges.add(this.beg);
+                this.beg = endOfSameNode(this.beg, this.end, this.depth);
+            } while (this.beg != this.end);
+            ranges.add(this.end);
+            }
+        }
+
+        public int compareTo(Node n) {
+            return n.children.size() - children.size();
+        }
+    }
+
+    private void buildImpl() {
+        PriorityQueue<Node> queue = new PriorityQueue<Node>();
+        queue.add(new Node(0, keys.length, 0, 0));
+        while(queue.isEmpty()==false) {
+            Node n = queue.poll();
+
+            if(n.end-n.beg == 1) {
+                if(rest(keys[n.beg], n.depth).isEmpty()==false) {
+                    base[n.rootNode] = -tailSB.length();		
+                    tailSB.append(rest(keys[n.beg], n.depth)+'\0');
+                } else {
+                    base[n.rootNode] = -(tailSB.length()-1);
+                }
+                continue;
+            }
+            
+            final int baseNode = alloca.allocate(n.children);
+            for(int i=0; i < n.children.size(); i++) 
+                queue.add(new Node(n.ranges.get(i), n.ranges.get(i+1),
+                                   setNode(n.rootNode, baseNode, n.children.get(i)), 
+                                   n.depth+1));
+        }
+    }    
 
     private void buildImpl(int beg, final int end, final int rootNode, final int depth) {
 	if(end-beg == 1) {
