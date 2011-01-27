@@ -117,16 +117,27 @@ public final class TrieBuilder {
             this.depth = depth;
 
             if(this.end-this.beg != 1) {
-            do {
-                final int ch = readCode(keys[this.beg], this.depth);
-                children.add(charcode[ch]);
-                ranges.add(this.beg);
-                this.beg = endOfSameNode(this.beg, this.end, this.depth);
-            } while (this.beg != this.end);
-            ranges.add(this.end);
+                do {
+                    final int ch = readCode(keys[this.beg], this.depth);
+                    children.add(charcode[ch]);
+                    ranges.add(this.beg);
+                    this.beg = endOfSameNode(this.beg, this.end, this.depth);
+                } while (this.beg != this.end);
+                ranges.add(this.end);
+            } else {
+                 if(rest(keys[this.beg], this.depth).isEmpty()==false) {
+                    base[this.rootNode] = -tailSB.length();		
+                    tailSB.append(rest(keys[this.beg], this.depth)+'\0');
+                } else {
+                    base[this.rootNode] = -(tailSB.length()-1);
+                }               
             }
         }
 
+        public boolean isTerminal() {
+            return end-beg==1;
+        }
+        
         public int compareTo(Node n) {
             return n.children.size() - children.size();
         }
@@ -138,21 +149,14 @@ public final class TrieBuilder {
         while(queue.isEmpty()==false) {
             Node n = queue.poll();
 
-            if(n.end-n.beg == 1) {
-                if(rest(keys[n.beg], n.depth).isEmpty()==false) {
-                    base[n.rootNode] = -tailSB.length();		
-                    tailSB.append(rest(keys[n.beg], n.depth)+'\0');
-                } else {
-                    base[n.rootNode] = -(tailSB.length()-1);
-                }
-                continue;
-            }
-            
             final int baseNode = alloca.allocate(n.children);
-            for(int i=0; i < n.children.size(); i++) 
-                queue.add(new Node(n.ranges.get(i), n.ranges.get(i+1),
-                                   setNode(n.rootNode, baseNode, n.children.get(i)), 
-                                   n.depth+1));
+            for(int i=0; i < n.children.size(); i++) {
+                final Node nn = new Node(n.ranges.get(i), n.ranges.get(i+1),
+                                        setNode(n.rootNode, baseNode, n.children.get(i)), 
+                                        n.depth+1);
+                if(nn.isTerminal()==false)
+                    queue.add(nn);
+            }
         }
     }    
 
