@@ -79,14 +79,11 @@ public final class TrieBuilder {
 	    System.arraycopy(chck, 0, tmpChck, 0, nodeSize);
 	    base = tmpBase;
 	    chck = tmpChck;
-int freeCount=0;
+
 	    for(int i=0; i < base.length; i++) 
 		if(base[i] < 0) 
-		    if(chck[i] < 0 || i == NodeAllocator.headIndex()) {
+		    if(chck[i] < 0 || i == NodeAllocator.headIndex()) 
 			base[i] = 0;
-    freeCount++;
- }
-System.out.println("free: "+freeCount);	    
 
 	    tail = tailSB.toString();
 	    tailSB.setLength(0);
