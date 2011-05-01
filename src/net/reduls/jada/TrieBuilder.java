@@ -3,7 +3,6 @@ package net.reduls.jada;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * DoubleArray-Trieの構築を行うクラス。
@@ -24,9 +23,8 @@ public final class TrieBuilder {
 
     private int codeLimit = -1;
 
-    private int done = 0;
-    private ConcurrentLinkedQueue<Entry> queue = 
-        new ConcurrentLinkedQueue<Entry>();
+    private int restCount = 0;
+    private ConcurrentStack<Entry> stack =  new ConcurrentStack<Entry>();
 
     /**
      * トライの構築対象となるキーセットを受け取り、{@link TrieBuilder}インスタンスを作成する。<br />
@@ -41,8 +39,8 @@ public final class TrieBuilder {
         for(String key : keys) 
 	    this.keys[i++] = key;
 
-        done = keys.size();
-	final int nodeLimit = (int)((double)countNode()*1.5)+0x10000;
+        restCount = keys.size();
+	final int nodeLimit = (int)((double)countNode()*2.5)+0x10000;
 	base = new int[nodeLimit];
 	chck = new int[nodeLimit];
 	alloca = new NodeAllocator(base, chck, codeLimit);
@@ -60,20 +58,6 @@ public final class TrieBuilder {
 	return build(false);
     }
 
-    private static class Entry {
-        public final int beg;
-        public final int end;
-        public final int rootNode;
-        public final int depth;
-        
-        public Entry(int beg, int end, int rootNode, int depth) {
-            this.beg = beg;
-            this.end = end;
-            this.rootNode = rootNode;
-            this.depth = depth;
-        }
-    }
-
     /**
      * トライを構築する。
      *
@@ -83,7 +67,7 @@ public final class TrieBuilder {
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
             if(keys.length != 0) {
-                queue.add(new Entry(0, keys.length, 0, 0));
+                stack.push(new Entry(0, keys.length, 0, 0));
                 List<Thread> ts = new ArrayList<Thread>();
                 
                 for(int i=0; i < Runtime.getRuntime().availableProcessors(); i++) 
@@ -93,9 +77,7 @@ public final class TrieBuilder {
                     t.start();
                 
                 for(Thread t : ts)
-                    try {
-                        t.join();
-                    } catch (Exception e) {}
+                    try { t.join(); } catch (Exception e) {}
             }
 	    
 	    int nodeSize=0;
@@ -138,17 +120,15 @@ public final class TrieBuilder {
         List<Integer> ranges   = new ArrayList<Integer>();
         
         for(;;){
-            Entry e = null;
-            while(e==null) {
-                if(done==0)
+            Entry e;
+            while((e=stack.pop())==null)
+                if(restCount==0)
                     return;
-                e = queue.poll();
-            }
             
             int beg = e.beg;
-            int end = e.end;
-            int rootNode = e.rootNode;
-            int depth = e.depth;
+            final int end = e.end;
+            final int rootNode = e.rootNode;
+            final int depth = e.depth;
             
             if(end-beg == 1) {
                 synchronized(this) {
@@ -158,7 +138,7 @@ public final class TrieBuilder {
                     } else {
                         base[rootNode] = -(tailSB.length()-1);
                     }
-                    done--;
+                    restCount--;
                 }
                 continue;
             }
@@ -175,8 +155,8 @@ public final class TrieBuilder {
             
             final int baseNode = alloca.allocate(children);
             for(int i=0; i < children.size(); i++) 
-                queue.add(new Entry(ranges.get(i), ranges.get(i+1), 
-                                    setNode(rootNode, baseNode, children.get(i)), depth+1));
+                stack.push(new Entry(ranges.get(i), ranges.get(i+1), 
+                                     setNode(rootNode, baseNode, children.get(i)), depth+1));
         }
     }
 
@@ -248,5 +228,19 @@ public final class TrieBuilder {
 	
 	public CharFreq(int code) { this.code = code; }
 	public int compareTo(CharFreq cf) { return cf.count - count; }
+    }
+    
+    private static class Entry {
+        public final int beg;
+        public final int end;
+        public final int rootNode;
+        public final int depth;
+        
+        public Entry(int beg, int end, int rootNode, int depth) {
+            this.beg = beg;
+            this.end = end;
+            this.rootNode = rootNode;
+            this.depth = depth;
+        }
     }
 }

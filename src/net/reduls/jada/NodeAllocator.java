@@ -66,7 +66,10 @@ final class NodeAllocator {
             for(int i=0; i < 3; i++) {
                 cur = -freeNext[cur];
                 if(cur < 0 || cur >= freeNext.length) {
-                    cur=-freeNext[headIndex()];
+                    try {
+                        Thread.sleep(1);
+                    } catch(Exception e) {}
+                    cur = -freeNext[headIndex()];
                     break;
                 }
             }
