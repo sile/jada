@@ -3,7 +3,7 @@
 
 
 [バージョン]
-- 0.1.3
+- 0.1.3-parallel
 
 
 [概要]
@@ -13,6 +13,14 @@
 -キーとID値の対応を保持するマップ
 　--ID値は、各キーに対して0以上キー数未満の値が自動的に付与される
 
+- ブランチ: parallel
+　-- 構築部(buildImplメソッド)の並列化試作
+　-- 成果:
+　　--- 基本的には効果があり、マルチコアマシンでは速くなっている模様
+　　--- ただ、並列化したことで割り当てノードの選択順が変わるので、入力キーセットによっては返って遅くなることがある
+　　　---- ex. 並列化したことで子ノードが少ないノードが先に選択されやすくなり、
+　　　　　　　 最後の方に子ノード数が多いノードが溜まることになるケースがある
+　　　　　　　 => そうなると空きノードの探索コストが増えるので、結局総処理時間は長くなる(かつ無駄な不使用ノードも増える)
 
 [ビルド方法]
 - jarファイル
@@ -24,13 +32,13 @@
 
 [コマンド使用例]
 # トライ構築
-$ java -cp jada-0.1.2.jar net.reduls.jada.bin.Build trie.idx < ソート済みキーセットファイル
+$ java -cp jada-0.1.3.jar net.reduls.jada.bin.Build trie.idx < ソート済みキーセットファイル
 
 # トライ検索
-$ java -cp jada-0.1.2.jar net.reduls.jada.bin.Search trie.idx < キーリストファイル
+$ java -cp jada-0.1.3.jar net.reduls.jada.bin.Search trie.idx < キーリストファイル
 
 # common-prefix-search
-$ java -cp jada-0.1.2.jar net.reduls.jada.bin.CommonPrefixSearch trie.idx < キーリストファイル
+$ java -cp jada-0.1.3.jar net.reduls.jada.bin.CommonPrefixSearch trie.idx < キーリストファイル
 
 ※ ファイルはいずれも 'キー文字列[改行]*' 形式
 
