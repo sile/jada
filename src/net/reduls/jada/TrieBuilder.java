@@ -84,7 +84,18 @@ public final class TrieBuilder {
 	if(hasBuilt==false) {
             if(keys.length != 0) {
                 queue.add(new Entry(0, keys.length, 0, 0));
-                buildImpl();
+                List<Thread> ts = new ArrayList<Thread>();
+                
+                for(int i=0; i < Runtime.getRuntime().availableProcessors(); i++) 
+                    ts.add(new Thread () { public void run() { buildImpl(); }});
+                
+                for(Thread t : ts)
+                    t.start();
+                
+                for(Thread t : ts)
+                    try {
+                        t.join();
+                    } catch (Exception e) {}
             }
 	    
 	    int nodeSize=0;
@@ -123,6 +134,9 @@ public final class TrieBuilder {
     }
     
     private void buildImpl() {
+        List<Integer> children = new ArrayList<Integer>();
+        List<Integer> ranges   = new ArrayList<Integer>();
+        
         for(;;){
             Entry e = null;
             while(e==null) {
@@ -146,12 +160,11 @@ public final class TrieBuilder {
                     }
                     done--;
                 }
-                //return;
                 continue;
             }
             
-            List<Integer> children = new ArrayList<Integer>();
-            List<Integer> ranges   = new ArrayList<Integer>();
+            children.clear();
+            ranges.clear();
             do {
                 final int ch = readCode(keys[beg], depth);
                 children.add(charcode[ch]);

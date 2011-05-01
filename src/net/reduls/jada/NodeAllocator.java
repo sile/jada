@@ -51,11 +51,21 @@ final class NodeAllocator {
 	int cur = -freeNext[headIndex()];
 	final int first = children.get(0);
 	
-	for(;; cur = -freeNext[-freeNext[-freeNext[cur]]]) {
+	for(;;) {
+            for(int i=0; i < 3; i++) {
+                cur = -freeNext[cur];
+                if(cur < 0)
+                    break;
+            }
+            if(cur==-1) {
+                cur=-freeNext[headIndex()];
+                continue;
+            }
+
 	    int x = cur - first;
 	    if(canAllocate(x, children)) {
                 synchronized(this) {
-                    if(canAllocate(x, children)) {
+                    if(freePrev[x+first] < 0 && canAllocate(x, children)) {
                         for(Integer code : children)
                             allocateImpl(x+code);
                         return x;

@@ -66,10 +66,16 @@ public final class Build {
         // build trie
         System.err.println("= Build trie ");
         t = new Time();
-        System.err.println("  == initialize");
+
+        System.err.print("  == initialize");
+        Time t2 = new Time();
         TrieBuilder bld = new TrieBuilder(keys);
-        System.err.println("  == build");
+        System.err.println(" ... "+t2.elapsed()+" ms");
+
+        System.err.print("  == build");
+        t2 = new Time();
         Trie trie = bld.build(arg.shrink);
+        System.err.println(" ... "+t2.elapsed()+" ms");
         System.err.println("    === node count:  "+trie.nodeCount());
         System.err.println("    === tail length: "+trie.tailLength());
         
