@@ -3,8 +3,7 @@ package net.reduls.jada;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * DoubleArray-Trieの構築を行うクラス。
@@ -25,6 +24,10 @@ public final class TrieBuilder {
 
     private int codeLimit = -1;
 
+    private int done = 0;
+    private ConcurrentLinkedQueue<Entry> queue = 
+        new ConcurrentLinkedQueue<Entry>();
+
     /**
      * トライの構築対象となるキーセットを受け取り、{@link TrieBuilder}インスタンスを作成する。<br />
      * 入力キーセットは、ソート済みで各要素はユニークである必要がある。<br />
@@ -38,6 +41,7 @@ public final class TrieBuilder {
         for(String key : keys) 
 	    this.keys[i++] = key;
 
+        done = keys.size();
 	final int nodeLimit = (int)((double)countNode()*1.5)+0x10000;
 	base = new int[nodeLimit];
 	chck = new int[nodeLimit];
@@ -56,6 +60,20 @@ public final class TrieBuilder {
 	return build(false);
     }
 
+    private static class Entry {
+        public final int beg;
+        public final int end;
+        public final int rootNode;
+        public final int depth;
+        
+        public Entry(int beg, int end, int rootNode, int depth) {
+            this.beg = beg;
+            this.end = end;
+            this.rootNode = rootNode;
+            this.depth = depth;
+        }
+    }
+
     /**
      * トライを構築する。
      *
@@ -64,8 +82,10 @@ public final class TrieBuilder {
      */
     public Trie build(boolean shrinkTail) {
 	if(hasBuilt==false) {
-            if(keys.length != 0)
-                buildImpl(0, keys.length, 0, 0);
+            if(keys.length != 0) {
+                queue.add(new Entry(0, keys.length, 0, 0));
+                buildImpl();
+            }
 	    
 	    int nodeSize=0;
 	    for(int i=0; i < base.length; i++)
@@ -102,31 +122,49 @@ public final class TrieBuilder {
 	return new Trie(base, chck, tail, charcode, bv);
     }
     
-    private void buildImpl(int beg, final int end, final int rootNode, final int depth) {
-	if(end-beg == 1) {
-	    if(rest(keys[beg], depth).isEmpty()==false) {
-		base[rootNode] = -tailSB.length();		
-		tailSB.append(rest(keys[beg], depth)+'\0');
-	    } else {
-		base[rootNode] = -(tailSB.length()-1);
-	    }
-	    return;
-	}
-
-	List<Integer> children = new ArrayList<Integer>();
-	List<Integer> ranges   = new ArrayList<Integer>();
-	do {
-	    final int ch = readCode(keys[beg], depth);
-	    children.add(charcode[ch]);
-	    ranges.add(beg);
-	    beg = endOfSameNode(beg, end, depth);
-	} while (beg != end);
-	ranges.add(end);
-
-	final int baseNode = alloca.allocate(children);
-	for(int i=0; i < children.size(); i++) 
-	    buildImpl(ranges.get(i), ranges.get(i+1), 
-                      setNode(rootNode, baseNode, children.get(i)), depth+1);
+    private void buildImpl() {
+        for(;;){
+            Entry e = null;
+            while(e==null) {
+                if(done==0)
+                    return;
+                e = queue.poll();
+            }
+            
+            int beg = e.beg;
+            int end = e.end;
+            int rootNode = e.rootNode;
+            int depth = e.depth;
+            
+            if(end-beg == 1) {
+                synchronized(this) {
+                    if(rest(keys[beg], depth).isEmpty()==false) {
+                        base[rootNode] = -tailSB.length();		
+                        tailSB.append(rest(keys[beg], depth)+'\0');
+                    } else {
+                        base[rootNode] = -(tailSB.length()-1);
+                    }
+                    done--;
+                }
+                //return;
+                continue;
+            }
+            
+            List<Integer> children = new ArrayList<Integer>();
+            List<Integer> ranges   = new ArrayList<Integer>();
+            do {
+                final int ch = readCode(keys[beg], depth);
+                children.add(charcode[ch]);
+                ranges.add(beg);
+                beg = endOfSameNode(beg, end, depth);
+            } while (beg != end);
+            ranges.add(end);
+            
+            final int baseNode = alloca.allocate(children);
+            for(int i=0; i < children.size(); i++) 
+                queue.add(new Entry(ranges.get(i), ranges.get(i+1), 
+                                    setNode(rootNode, baseNode, children.get(i)), depth+1));
+        }
     }
 
     private int setNode(int node, int baseNode, int code) {

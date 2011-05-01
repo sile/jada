@@ -54,9 +54,13 @@ final class NodeAllocator {
 	for(;; cur = -freeNext[-freeNext[-freeNext[cur]]]) {
 	    int x = cur - first;
 	    if(canAllocate(x, children)) {
-		for(Integer code : children)
-		    allocateImpl(x+code);
-		return x;
+                synchronized(this) {
+                    if(canAllocate(x, children)) {
+                        for(Integer code : children)
+                            allocateImpl(x+code);
+                        return x;
+                    }
+                }
 	    }
 	}
     }
